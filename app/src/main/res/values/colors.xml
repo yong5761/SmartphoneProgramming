@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="ladybug_red">#E74C3C</color>
+    <color name="ladybug_red_dark">#C0392B</color>
+    <color name="ladybug_navy">#2C3E50</color>
+
+    <color name="control_off_track">#7F8C8D</color>
+    <color name="control_off_thumb">#ECF0F1</color>
+
+    <color name="card_description_text">#E0E0E0</color>
+</resources>

@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">LadyBug</string>
+    <string name="game_title">LadyBug Game</string>
+    <string name="menu_start">게임 시작</string>
+    <string name="menu_settings">설정</string>
+    <string name="menu_item_info">아이템 설명</string>
+    <string name="placeholder_game">게임 화면 - 4주차에 구현 예정</string>
+    <string name="placeholder_settings">설정 화면 - 2주차에 구현 예정</string>
+    <string name="placeholder_item_info">아이템 설명 화면 - 3주차에 구현 예정</string>
+    <string name="settings_title">설정</string>
+    <string name="settings_bgm">배경음악</string>
+    <string name="settings_sfx">효과음</string>
+    <string name="btn_back_to_menu">← 메뉴로</string>
+    <string name="item_info_title">아이템 설명</string>
+</resources>
