@@ -1,19 +1,24 @@
-현재까지 구현된 화면
+<img width="246" height="538" alt="image" src="https://github.com/user-attachments/assets/c18111cc-c6f8-49ae-a362-cd5964e8f39d" />현재까지 구현된 화면
    메인 메뉴 (MainActivity)
 -잔디 배경 이미지 위에 게임 제목과 메뉴 버튼 3개(게임 시작 / 설정 / 아이템 설명)를 배치한다.
 -게임 제목은 좌상단에 큰 크기의 흰색 굵은 글씨와 검은 그림자로 표현하였고, 버튼은 화면 우측에 세로로 정렬하였다.
 -각 버튼은 둥근 모서리 의 빨간 배경 을 가지며, 클릭 시 Intent 로 해당 화면으로 전환된다.
+<img width="245" height="538" alt="image" src="https://github.com/user-attachments/assets/d0a4d4c5-54cd-482e-8ab4-34d069ede41b" />
+
 
    소리 설정 (SettingsActivity)
 -좌상단 "← 메뉴로" 버튼과 상단 가운데 "설정" 타이틀을 두고, 그 아래에 배경음악과 효과음 두 개의 섹션을 배치한다.
 -라벨 + Switch + SeekBar 조합으로 구성된다.
 -Switch 와 SeekBar 의 변경은 즉시 SharedPreferences 에 저장되며, 화면 재진입 시 저장된 값으로 UI 가 복원된다.
 -Switch 가 OFF 인 경우 같은 섹션의 SeekBar 는 비활성화 + 알파 0.4 로 흐리게 처리되어 시각적으로 구분된다.
+<img width="246" height="537" alt="image" src="https://github.com/user-attachments/assets/873492e1-b046-48de-9dda-0e80d885bb00" />
+
 
    아이템 설명 (ItemInfoActivity)
 -좌상단 "← 메뉴로" 버튼과 "아이템 설명" 타이틀, 그 아래에 ScrollView 로 감싼 카드 목록을 배치한다.
 -장판, 보호막, 느림, 회복, 점수 부스트 다섯 종 아이템을 ItemInfo 데이터 클래스의 리스트로 정의하고, LayoutInflater 로 카드 레이아웃을 동적으로 인플레이트하여 컨테이너에 추가한다.
 -각 카드는 반투명 어두운 네이비 배경 + 둥근 모서리 + 그림자를 가지며, 좌측 색상 원형 아이콘과 우측 이름·설명 텍스트로 구성된다.
+<img width="246" height="538" alt="image" src="https://github.com/user-attachments/assets/b8cc92f9-2b5c-4837-a154-a2c9f720f4e0" />
 
    인게임 골격 (GameActivity + GameView)
 -기존 XML 레이아웃 대신 코드에서 setContentView(GameView(this)) 로 커스텀 뷰를 직접 컨텐츠로 사용한다.
