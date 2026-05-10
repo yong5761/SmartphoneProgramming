@@ -24,7 +24,10 @@
 
         <activity
             android:name=".GameActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.LadyBug.Fullscreen"
+            tools:ignore="LockedOrientationActivity" />
 
         <activity
             android:name=".SettingsActivity"

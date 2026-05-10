@@ -2,5 +2,18 @@
     <style name="Base.Theme.LadyBug" parent="Theme.Material3.DayNight.NoActionBar">
     </style>
 
-    <style name="Theme.LadyBug" parent="Base.Theme.LadyBug" />
+    <style name="Theme.LadyBug" parent="Base.Theme.LadyBug">
+        <item name="android:windowAnimationStyle">@style/NoActivityAnimation</item>
+    </style>
+
+    <style name="NoActivityAnimation">
+        <item name="android:activityOpenEnterAnimation">@null</item>
+        <item name="android:activityOpenExitAnimation">@null</item>
+        <item name="android:activityCloseEnterAnimation">@null</item>
+        <item name="android:activityCloseExitAnimation">@null</item>
+    </style>
+
+    <style name="Theme.LadyBug.Fullscreen" parent="Theme.LadyBug">
+        <item name="android:windowFullscreen">true</item>
+    </style>
 </resources>
