@@ -10,8 +10,10 @@ import android.view.Choreographer
 import android.view.MotionEvent
 import android.view.View
 import com.wooin.ladybug.R
+import com.wooin.ladybug.game.Enemy
 import com.wooin.ladybug.game.Player
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 class GameView @JvmOverloads constructor(
     context: Context,
@@ -23,6 +25,8 @@ class GameView @JvmOverloads constructor(
         BitmapFactory.decodeResource(resources, R.drawable.bg_grass)
     private val viewRect = Rect()
     private var player: Player? = null
+    private val enemies = mutableListOf<Enemy>()
+    private var framesSinceSpawn = 0
 
     private var targetX: Float = 0f
     private var targetY: Float = 0f
@@ -33,13 +37,15 @@ class GameView @JvmOverloads constructor(
     private val frameCallback = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
             val p = player
-            if (p != null && isTouching) {
-                movePlayerTowardTarget(p)
-                invalidate()
-                choreographer.postFrameCallback(this)
-            } else {
+            if (p == null) {
                 loopRunning = false
+                return
             }
+            if (isTouching) movePlayerTowardTarget(p)
+            updateEnemies()
+            spawnEnemyIfDue()
+            invalidate()
+            choreographer.postFrameCallback(this)
         }
     }
 
@@ -48,12 +54,14 @@ class GameView @JvmOverloads constructor(
         viewRect.set(0, 0, w, h)
         if (player == null) {
             player = Player(x = w / 2f, y = h * 0.75f)
+            startLoopIfNeeded()
         }
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawBitmap(backgroundBitmap, null, viewRect, null)
+        enemies.forEach { it.draw(canvas) }
         player?.draw(canvas)
     }
 
@@ -64,7 +72,6 @@ class GameView @JvmOverloads constructor(
                 targetX = event.x
                 targetY = event.y
                 isTouching = true
-                startLoopIfNeeded()
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 isTouching = false
@@ -106,7 +113,31 @@ class GameView @JvmOverloads constructor(
         }
     }
 
+    private fun updateEnemies() {
+        val it = enemies.iterator()
+        while (it.hasNext()) {
+            val e = it.next()
+            e.update()
+            if (e.y - e.radius > height) it.remove()
+        }
+    }
+
+    private fun spawnEnemyIfDue() {
+        framesSinceSpawn++
+        if (framesSinceSpawn < SPAWN_INTERVAL_FRAMES) return
+        framesSinceSpawn = 0
+        if (width <= 0) return
+        val r = ENEMY_RADIUS
+        val x = Random.nextFloat() * (width - 2 * r) + r
+        val y = -r
+        val vx = Random.nextFloat() * 6f - 3f
+        val vy = Random.nextFloat() * 4f + 3f
+        enemies.add(Enemy(x = x, y = y, radius = r, vx = vx, vy = vy))
+    }
+
     companion object {
         private const val PLAYER_SPEED = 8f
+        private const val ENEMY_RADIUS = 40f
+        private const val SPAWN_INTERVAL_FRAMES = 40
     }
 }
