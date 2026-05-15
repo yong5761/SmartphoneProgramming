@@ -4,7 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.RectF
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.Choreographer
 import android.view.MotionEvent
@@ -21,6 +25,7 @@ class GameView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
+    private val density = resources.displayMetrics.density
     private val backgroundBitmap: Bitmap =
         BitmapFactory.decodeResource(resources, R.drawable.bg_grass)
     private val viewRect = Rect()
@@ -32,6 +37,29 @@ class GameView @JvmOverloads constructor(
     private var targetY: Float = 0f
     private var isTouching: Boolean = false
     private var loopRunning: Boolean = false
+    private var isGameOver: Boolean = false
+
+    private val restartButtonRect = RectF()
+
+    private val gameOverTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textSize = 64f * density
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.DEFAULT_BOLD
+        setShadowLayer(10f, 4f, 4f, Color.BLACK)
+    }
+
+    private val restartButtonFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#E74C3C")
+        style = Paint.Style.FILL
+    }
+
+    private val restartButtonTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textSize = 48f * density
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.DEFAULT_BOLD
+    }
 
     private val choreographer = Choreographer.getInstance()
     private val frameCallback = object : Choreographer.FrameCallback {
@@ -44,14 +72,21 @@ class GameView @JvmOverloads constructor(
             if (isTouching) movePlayerTowardTarget(p)
             updateEnemies()
             spawnEnemyIfDue()
+            if (checkCollision(p)) isGameOver = true
             invalidate()
-            choreographer.postFrameCallback(this)
+            if (isGameOver) {
+                loopRunning = false
+            } else {
+                choreographer.postFrameCallback(this)
+            }
         }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         viewRect.set(0, 0, w, h)
+        layoutRestartButton(w, h)
+        fitGameOverTextSize(w)
         if (player == null) {
             player = Player(x = w / 2f, y = h * 0.75f)
             startLoopIfNeeded()
@@ -63,10 +98,21 @@ class GameView @JvmOverloads constructor(
         canvas.drawBitmap(backgroundBitmap, null, viewRect, null)
         enemies.forEach { it.draw(canvas) }
         player?.draw(canvas)
+        if (isGameOver) {
+            drawGameOverOverlay(canvas)
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (player == null) return false
+        if (isGameOver) {
+            if (event.action == MotionEvent.ACTION_DOWN &&
+                restartButtonRect.contains(event.x, event.y)
+            ) {
+                restartGame()
+            }
+            return true
+        }
         when (event.action) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
                 targetX = event.x
@@ -133,6 +179,58 @@ class GameView @JvmOverloads constructor(
         val vx = Random.nextFloat() * 6f - 3f
         val vy = Random.nextFloat() * 4f + 3f
         enemies.add(Enemy(x = x, y = y, radius = r, vx = vx, vy = vy))
+    }
+
+    private fun checkCollision(p: Player): Boolean {
+        for (e in enemies) {
+            val dx = p.x - e.x
+            val dy = p.y - e.y
+            val rsum = p.radius + e.radius
+            if (dx * dx + dy * dy <= rsum * rsum) return true
+        }
+        return false
+    }
+
+    private fun fitGameOverTextSize(w: Int) {
+        val targetWidth = w * 0.85f
+        gameOverTextPaint.textSize = 64f * density
+        val measured = gameOverTextPaint.measureText("GAME OVER")
+        if (measured > targetWidth) {
+            gameOverTextPaint.textSize *= targetWidth / measured
+        }
+    }
+
+    private fun layoutRestartButton(w: Int, h: Int) {
+        val btnW = 240f * density
+        val btnH = 80f * density
+        val cx = w / 2f
+        val cy = h / 2f + 60f * density
+        restartButtonRect.set(cx - btnW / 2, cy - btnH / 2, cx + btnW / 2, cy + btnH / 2)
+    }
+
+    private fun drawGameOverOverlay(canvas: Canvas) {
+        canvas.drawColor(Color.argb(160, 0, 0, 0))
+        val gameOverY = height / 2f - 60f * density
+        canvas.drawText("GAME OVER", width / 2f, gameOverY, gameOverTextPaint)
+        val cornerRadius = 20f * density
+        canvas.drawRoundRect(restartButtonRect, cornerRadius, cornerRadius, restartButtonFillPaint)
+        val textY = restartButtonRect.centerY() -
+            (restartButtonTextPaint.descent() + restartButtonTextPaint.ascent()) / 2
+        canvas.drawText("다시?", restartButtonRect.centerX(), textY, restartButtonTextPaint)
+    }
+
+    private fun restartGame() {
+        isGameOver = false
+        isTouching = false
+        enemies.clear()
+        framesSinceSpawn = 0
+        val p = player
+        if (p != null) {
+            p.x = width / 2f
+            p.y = height * 0.75f
+        }
+        startLoopIfNeeded()
+        invalidate()
     }
 
     companion object {
