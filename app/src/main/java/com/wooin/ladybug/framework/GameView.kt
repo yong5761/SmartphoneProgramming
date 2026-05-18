@@ -15,6 +15,8 @@ import android.view.MotionEvent
 import android.view.View
 import com.wooin.ladybug.R
 import com.wooin.ladybug.game.Enemy
+import com.wooin.ladybug.game.Item
+import com.wooin.ladybug.game.ItemType
 import com.wooin.ladybug.game.Player
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -31,7 +33,9 @@ class GameView @JvmOverloads constructor(
     private val viewRect = Rect()
     private var player: Player? = null
     private val enemies = mutableListOf<Enemy>()
+    private val items = mutableListOf<Item>()
     private var framesSinceSpawn = 0
+    private var framesSinceItemSpawn = 0
 
     private var targetX: Float = 0f
     private var targetY: Float = 0f
@@ -71,7 +75,9 @@ class GameView @JvmOverloads constructor(
             }
             if (isTouching) movePlayerTowardTarget(p)
             updateEnemies()
+            updateItems()
             spawnEnemyIfDue()
+            spawnItemIfDue()
             if (checkCollision(p)) isGameOver = true
             invalidate()
             if (isGameOver) {
@@ -97,6 +103,7 @@ class GameView @JvmOverloads constructor(
         super.onDraw(canvas)
         canvas.drawBitmap(backgroundBitmap, null, viewRect, null)
         enemies.forEach { it.draw(canvas) }
+        items.forEach { it.draw(canvas) }
         player?.draw(canvas)
         if (isGameOver) {
             drawGameOverOverlay(canvas)
@@ -168,6 +175,15 @@ class GameView @JvmOverloads constructor(
         }
     }
 
+    private fun updateItems() {
+        val it = items.iterator()
+        while (it.hasNext()) {
+            val item = it.next()
+            item.update()
+            if (item.y - item.radius > height) it.remove()
+        }
+    }
+
     private fun spawnEnemyIfDue() {
         framesSinceSpawn++
         if (framesSinceSpawn < SPAWN_INTERVAL_FRAMES) return
@@ -179,6 +195,21 @@ class GameView @JvmOverloads constructor(
         val vx = Random.nextFloat() * 6f - 3f
         val vy = Random.nextFloat() * 4f + 3f
         enemies.add(Enemy(x = x, y = y, radius = r, vx = vx, vy = vy))
+    }
+
+    private fun spawnItemIfDue() {
+        framesSinceItemSpawn++
+        if (framesSinceItemSpawn < ITEM_SPAWN_INTERVAL_FRAMES) return
+        framesSinceItemSpawn = 0
+        if (width <= 0) return
+        val r = ENEMY_RADIUS
+        val x = Random.nextFloat() * (width - 2 * r) + r
+        val y = -r
+        val vx = Random.nextFloat() * 6f - 3f
+        val vy = Random.nextFloat() * 4f + 3f
+        val types = ItemType.values()
+        val type = types[Random.nextInt(types.size)]
+        items.add(Item(x = x, y = y, radius = r, vx = vx, vy = vy, type = type))
     }
 
     private fun checkCollision(p: Player): Boolean {
@@ -223,7 +254,9 @@ class GameView @JvmOverloads constructor(
         isGameOver = false
         isTouching = false
         enemies.clear()
+        items.clear()
         framesSinceSpawn = 0
+        framesSinceItemSpawn = 0
         val p = player
         if (p != null) {
             p.x = width / 2f
@@ -237,5 +270,6 @@ class GameView @JvmOverloads constructor(
         private const val PLAYER_SPEED = 8f
         private const val ENEMY_RADIUS = 40f
         private const val SPAWN_INTERVAL_FRAMES = 40
+        private const val ITEM_SPAWN_INTERVAL_FRAMES = 120
     }
 }
