@@ -176,12 +176,7 @@ class GameView @JvmOverloads constructor(
     }
 
     private fun updateItems() {
-        val it = items.iterator()
-        while (it.hasNext()) {
-            val item = it.next()
-            item.update()
-            if (item.y - item.radius > height) it.remove()
-        }
+        items.forEach { it.update(width, height) }
     }
 
     private fun spawnEnemyIfDue() {

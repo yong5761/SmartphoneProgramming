@@ -16,8 +16,8 @@ class Item(
     var x: Float,
     var y: Float,
     val radius: Float,
-    val vx: Float,
-    val vy: Float,
+    var vx: Float,
+    var vy: Float,
     val type: ItemType
 ) {
 
@@ -27,9 +27,23 @@ class Item(
         isAntiAlias = true
     }
 
-    fun update() {
+    fun update(viewWidth: Int, viewHeight: Int) {
         x += vx
         y += vy
+        if (x < radius && vx < 0) {
+            x = radius
+            vx = -vx
+        } else if (x > viewWidth - radius && vx > 0) {
+            x = viewWidth - radius
+            vx = -vx
+        }
+        if (y < radius && vy < 0) {
+            y = radius
+            vy = -vy
+        } else if (y > viewHeight - radius && vy > 0) {
+            y = viewHeight - radius
+            vy = -vy
+        }
     }
 
     fun draw(canvas: Canvas) {
