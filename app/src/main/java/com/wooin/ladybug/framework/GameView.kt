@@ -195,6 +195,7 @@ class GameView @JvmOverloads constructor(
     private fun spawnItemIfDue() {
         framesSinceItemSpawn++
         if (framesSinceItemSpawn < ITEM_SPAWN_INTERVAL_FRAMES) return
+        if (items.size >= MAX_ITEMS_ON_SCREEN) return
         framesSinceItemSpawn = 0
         if (width <= 0) return
         val r = ENEMY_RADIUS
@@ -266,5 +267,6 @@ class GameView @JvmOverloads constructor(
         private const val ENEMY_RADIUS = 40f
         private const val SPAWN_INTERVAL_FRAMES = 40
         private const val ITEM_SPAWN_INTERVAL_FRAMES = 120
+        private const val MAX_ITEMS_ON_SCREEN = 5
     }
 }
