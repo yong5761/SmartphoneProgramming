@@ -9,8 +9,16 @@ class Player(
     var y: Float,
     val radius: Float = 60f
 ) {
-
     var barrierType: ItemType? = null
+        set(value) {
+            field = value
+            if (value != null) {
+                val base = value.color
+                barrierStrokePaint.color = base
+                barrierFillPaint.color = Color.argb(70, Color.red(base), Color.green(base), Color.blue(base))
+            }
+        }
+
     var barrierFramesLeft: Int = 0
 
     val barrierRadius get() = when (barrierType) {
@@ -18,17 +26,15 @@ class Player(
         else -> radius + 30f
     }
 
-    private val fillPaint = Paint().apply {
+    private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.RED
         style = Paint.Style.FILL
-        isAntiAlias = true
     }
 
-    private val strokePaint = Paint().apply {
+    private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.BLACK
         style = Paint.Style.STROKE
         strokeWidth = 6f
-        isAntiAlias = true
     }
 
     private val barrierFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -52,12 +58,7 @@ class Player(
 
     fun draw(canvas: Canvas) {
         barrierType?.let {
-            val base = it.color
-            if (it == ItemType.SHIELD) {
-                barrierFillPaint.color = Color.argb(70, Color.red(base), Color.green(base), Color.blue(base))
-                canvas.drawCircle(x, y, barrierRadius, barrierFillPaint)
-            }
-            barrierStrokePaint.color = base
+            if (it == ItemType.SHIELD) canvas.drawCircle(x, y, barrierRadius, barrierFillPaint)
             canvas.drawCircle(x, y, barrierRadius, barrierStrokePaint)
         }
         canvas.drawCircle(x, y, radius, fillPaint)

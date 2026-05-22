@@ -17,6 +17,7 @@ import com.wooin.ladybug.R
 import com.wooin.ladybug.game.Enemy
 import com.wooin.ladybug.game.Item
 import com.wooin.ladybug.game.ItemType
+import com.wooin.ladybug.game.Jangpan
 import com.wooin.ladybug.game.Player
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -30,10 +31,12 @@ class GameView @JvmOverloads constructor(
     private val density = resources.displayMetrics.density
     private val backgroundBitmap: Bitmap =
         BitmapFactory.decodeResource(resources, R.drawable.bg_grass)
+    private var scaledBackground: Bitmap? = null
     private val viewRect = Rect()
     private var player: Player? = null
     private val enemies = mutableListOf<Enemy>()
     private val items = mutableListOf<Item>()
+    private val jangpans = mutableListOf<Jangpan>()
     private var framesSinceSpawn = 0
     private var framesSinceItemSpawn = 0
 
@@ -76,6 +79,7 @@ class GameView @JvmOverloads constructor(
             if (isTouching) movePlayerTowardTarget(p)
             updateEnemies()
             if (p.barrierType == ItemType.SHIELD) applyShieldEffect(p)
+            updateJangpans()
             p.tickBarrier()
             updateItems()
             checkItemPickup(p)
@@ -94,6 +98,8 @@ class GameView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         viewRect.set(0, 0, w, h)
+        scaledBackground?.recycle()
+        scaledBackground = Bitmap.createScaledBitmap(backgroundBitmap, w, h, true)
         layoutRestartButton(w, h)
         fitGameOverTextSize(w)
         if (player == null) {
@@ -104,7 +110,9 @@ class GameView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawBitmap(backgroundBitmap, null, viewRect, null)
+        scaledBackground?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+            ?: canvas.drawBitmap(backgroundBitmap, null, viewRect, null)
+        jangpans.forEach { it.draw(canvas) }
         enemies.forEach { it.draw(canvas) }
         items.forEach { it.draw(canvas) }
         player?.draw(canvas)
@@ -141,6 +149,8 @@ class GameView @JvmOverloads constructor(
         choreographer.removeFrameCallback(frameCallback)
         loopRunning = false
         isTouching = false
+        scaledBackground?.recycle()
+        scaledBackground = null
     }
 
     private fun startLoopIfNeeded() {
@@ -206,8 +216,7 @@ class GameView @JvmOverloads constructor(
         val y = -r
         val vx = Random.nextFloat() * 6f - 3f
         val vy = Random.nextFloat() * 4f + 3f
-        val types = ItemType.values()
-        val type = types[Random.nextInt(types.size)]
+        val type = ITEM_TYPES[Random.nextInt(ITEM_TYPES.size)]
         items.add(Item(x = x, y = y, radius = r, vx = vx, vy = vy, type = type))
     }
 
@@ -219,9 +228,32 @@ class GameView @JvmOverloads constructor(
             val dy = p.y - item.y
             val rsum = p.radius + item.radius
             if (dx * dx + dy * dy <= rsum * rsum) {
-                p.barrierType = item.type
-                p.barrierFramesLeft = BARRIER_SHIELD_FRAMES
+                if (item.type == ItemType.JANGPAN) {
+                    jangpans.add(Jangpan(item.x, item.y, JANGPAN_RADIUS, JANGPAN_FRAMES))
+                } else {
+                    p.barrierType = item.type
+                    p.barrierFramesLeft = BARRIER_SHIELD_FRAMES
+                }
                 it.remove()
+            }
+        }
+    }
+
+    private fun updateJangpans() {
+        val jit = jangpans.iterator()
+        while (jit.hasNext()) {
+            val jangpan = jit.next()
+            jangpan.framesLeft--
+            if (jangpan.framesLeft <= 0) {
+                jit.remove()
+                continue
+            }
+            val eit = enemies.iterator()
+            while (eit.hasNext()) {
+                val e = eit.next()
+                val dx = e.x - jangpan.x
+                val dy = e.y - jangpan.y
+                if (dx * dx + dy * dy <= jangpan.radius * jangpan.radius) eit.remove()
             }
         }
     }
@@ -280,6 +312,7 @@ class GameView @JvmOverloads constructor(
         isTouching = false
         enemies.clear()
         items.clear()
+        jangpans.clear()
         framesSinceSpawn = 0
         framesSinceItemSpawn = 0
         val p = player
@@ -294,11 +327,14 @@ class GameView @JvmOverloads constructor(
     }
 
     companion object {
+        private val ITEM_TYPES = ItemType.entries.toTypedArray()
         private const val PLAYER_SPEED = 8f
         private const val ENEMY_RADIUS = 40f
         private const val SPAWN_INTERVAL_FRAMES = 40
         private const val ITEM_SPAWN_INTERVAL_FRAMES = 120
         private const val MAX_ITEMS_ON_SCREEN = 5
         private const val BARRIER_SHIELD_FRAMES = 300
+        private const val JANGPAN_RADIUS = 250f
+        private const val JANGPAN_FRAMES = 180
     }
 }
