@@ -76,6 +76,7 @@ class GameView @JvmOverloads constructor(
             if (isTouching) movePlayerTowardTarget(p)
             updateEnemies()
             updateItems()
+            checkItemPickup(p)
             spawnEnemyIfDue()
             spawnItemIfDue()
             if (checkCollision(p)) isGameOver = true
@@ -208,6 +209,20 @@ class GameView @JvmOverloads constructor(
         items.add(Item(x = x, y = y, radius = r, vx = vx, vy = vy, type = type))
     }
 
+    private fun checkItemPickup(p: Player) {
+        val it = items.iterator()
+        while (it.hasNext()) {
+            val item = it.next()
+            val dx = p.x - item.x
+            val dy = p.y - item.y
+            val rsum = p.radius + item.radius
+            if (dx * dx + dy * dy <= rsum * rsum) {
+                p.barrierColor = item.type.color
+                it.remove()
+            }
+        }
+    }
+
     private fun checkCollision(p: Player): Boolean {
         for (e in enemies) {
             val dx = p.x - e.x
@@ -257,6 +272,7 @@ class GameView @JvmOverloads constructor(
         if (p != null) {
             p.x = width / 2f
             p.y = height * 0.75f
+            p.barrierColor = null
         }
         startLoopIfNeeded()
         invalidate()
