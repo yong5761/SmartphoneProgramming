@@ -9,4 +9,9 @@ class GameActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(GameView(this))
     }
+
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(0, 0)
+    }
 }
