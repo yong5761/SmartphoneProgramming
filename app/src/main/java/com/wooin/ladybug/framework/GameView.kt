@@ -75,6 +75,8 @@ class GameView @JvmOverloads constructor(
             }
             if (isTouching) movePlayerTowardTarget(p)
             updateEnemies()
+            if (p.barrierType == ItemType.SHIELD) applyShieldEffect(p)
+            p.tickBarrier()
             updateItems()
             checkItemPickup(p)
             spawnEnemyIfDue()
@@ -217,9 +219,21 @@ class GameView @JvmOverloads constructor(
             val dy = p.y - item.y
             val rsum = p.radius + item.radius
             if (dx * dx + dy * dy <= rsum * rsum) {
-                p.barrierColor = item.type.color
+                p.barrierType = item.type
+                p.barrierFramesLeft = BARRIER_SHIELD_FRAMES
                 it.remove()
             }
+        }
+    }
+
+    private fun applyShieldEffect(p: Player) {
+        val it = enemies.iterator()
+        while (it.hasNext()) {
+            val e = it.next()
+            val dx = p.x - e.x
+            val dy = p.y - e.y
+            val rsum = p.barrierRadius + e.radius
+            if (dx * dx + dy * dy <= rsum * rsum) it.remove()
         }
     }
 
@@ -272,7 +286,8 @@ class GameView @JvmOverloads constructor(
         if (p != null) {
             p.x = width / 2f
             p.y = height * 0.75f
-            p.barrierColor = null
+            p.barrierType = null
+            p.barrierFramesLeft = 0
         }
         startLoopIfNeeded()
         invalidate()
@@ -284,5 +299,6 @@ class GameView @JvmOverloads constructor(
         private const val SPAWN_INTERVAL_FRAMES = 40
         private const val ITEM_SPAWN_INTERVAL_FRAMES = 120
         private const val MAX_ITEMS_ON_SCREEN = 5
+        private const val BARRIER_SHIELD_FRAMES = 300
     }
 }
