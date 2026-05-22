@@ -20,13 +20,6 @@ class Item(
     var vy: Float,
     val type: ItemType
 ) {
-
-    private val fillPaint = Paint().apply {
-        color = type.color
-        style = Paint.Style.FILL
-        isAntiAlias = true
-    }
-
     fun update(viewWidth: Int, viewHeight: Int) {
         x += vx
         y += vy
@@ -47,6 +40,12 @@ class Item(
     }
 
     fun draw(canvas: Canvas) {
-        canvas.drawCircle(x, y, radius, fillPaint)
+        canvas.drawCircle(x, y, radius, paints[type.ordinal])
+    }
+
+    companion object {
+        private val paints = ItemType.entries.map { t ->
+            Paint(Paint.ANTI_ALIAS_FLAG).apply { color = t.color; style = Paint.Style.FILL }
+        }.toTypedArray()
     }
 }
