@@ -39,6 +39,7 @@ class GameView @JvmOverloads constructor(
     private val jangpans = mutableListOf<Jangpan>()
     private var framesSinceSpawn = 0
     private var framesSinceItemSpawn = 0
+    private var slowFramesLeft = 0
 
     private var targetX: Float = 0f
     private var targetY: Float = 0f
@@ -81,6 +82,7 @@ class GameView @JvmOverloads constructor(
             if (p.barrierType == ItemType.SHIELD) applyShieldEffect(p)
             updateJangpans()
             p.tickBarrier()
+            updateSlow()
             updateItems()
             checkItemPickup(p)
             spawnEnemyIfDue()
@@ -180,10 +182,11 @@ class GameView @JvmOverloads constructor(
     }
 
     private fun updateEnemies() {
+        val speedMult = if (slowFramesLeft > 0) SLOW_SPEED_FACTOR else 1f
         val it = enemies.iterator()
         while (it.hasNext()) {
             val e = it.next()
-            e.update()
+            e.update(speedMult)
             if (e.y - e.radius > height) it.remove()
         }
     }
@@ -194,7 +197,8 @@ class GameView @JvmOverloads constructor(
 
     private fun spawnEnemyIfDue() {
         framesSinceSpawn++
-        if (framesSinceSpawn < SPAWN_INTERVAL_FRAMES) return
+        val interval = if (slowFramesLeft > 0) SLOW_SPAWN_INTERVAL else SPAWN_INTERVAL_FRAMES
+        if (framesSinceSpawn < interval) return
         framesSinceSpawn = 0
         if (width <= 0) return
         val r = ENEMY_RADIUS
@@ -230,6 +234,8 @@ class GameView @JvmOverloads constructor(
             if (dx * dx + dy * dy <= rsum * rsum) {
                 if (item.type == ItemType.JANGPAN) {
                     jangpans.add(Jangpan(item.x, item.y, JANGPAN_RADIUS, JANGPAN_FRAMES))
+                } else if (item.type == ItemType.SLOW) {
+                    slowFramesLeft = SLOW_FRAMES
                 } else {
                     p.barrierType = item.type
                     p.barrierFramesLeft = BARRIER_SHIELD_FRAMES
@@ -256,6 +262,10 @@ class GameView @JvmOverloads constructor(
                 if (dx * dx + dy * dy <= jangpan.radius * jangpan.radius) eit.remove()
             }
         }
+    }
+
+    private fun updateSlow() {
+        if (slowFramesLeft > 0) slowFramesLeft--
     }
 
     private fun applyShieldEffect(p: Player) {
@@ -315,6 +325,7 @@ class GameView @JvmOverloads constructor(
         jangpans.clear()
         framesSinceSpawn = 0
         framesSinceItemSpawn = 0
+        slowFramesLeft = 0
         val p = player
         if (p != null) {
             p.x = width / 2f
@@ -336,5 +347,8 @@ class GameView @JvmOverloads constructor(
         private const val BARRIER_SHIELD_FRAMES = 300
         private const val JANGPAN_RADIUS = 250f
         private const val JANGPAN_FRAMES = 180
+        private const val SLOW_FRAMES = 300
+        private const val SLOW_SPEED_FACTOR = 0.3f
+        private val SLOW_SPAWN_INTERVAL = (SPAWN_INTERVAL_FRAMES / SLOW_SPEED_FACTOR).toInt()
     }
 }

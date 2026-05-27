@@ -11,9 +11,9 @@ class Enemy(
     val vx: Float,
     val vy: Float
 ) {
-    fun update() {
-        x += vx
-        y += vy
+    fun update(speedMultiplier: Float = 1f) {
+        x += vx * speedMultiplier
+        y += vy * speedMultiplier
     }
 
     fun draw(canvas: Canvas) {
