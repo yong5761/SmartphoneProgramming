@@ -217,7 +217,8 @@ class GameView @JvmOverloads constructor(
 
     private fun spawnEnemyIfDue() {
         framesSinceSpawn++
-        val interval = if (slowFramesLeft > 0) SLOW_SPAWN_INTERVAL else SPAWN_INTERVAL_FRAMES
+        val base = (SPAWN_INTERVAL_FRAMES - lastSecs / 15 * 3).coerceAtLeast(MIN_SPAWN_INTERVAL_FRAMES)
+        val interval = if (slowFramesLeft > 0) SLOW_SPAWN_INTERVAL else base
         if (framesSinceSpawn < interval) return
         framesSinceSpawn = 0
         if (width <= 0) return
@@ -387,6 +388,7 @@ class GameView @JvmOverloads constructor(
         private const val BARRIER_SHIELD_FRAMES = 300
         private const val JANGPAN_RADIUS = 250f
         private const val JANGPAN_FRAMES = 180
+        private const val MIN_SPAWN_INTERVAL_FRAMES = 15
         private const val SLOW_FRAMES = 300
         private const val SLOW_SPEED_FACTOR = 0.3f
         private val SLOW_SPAWN_INTERVAL = (SPAWN_INTERVAL_FRAMES / SLOW_SPEED_FACTOR).toInt()
