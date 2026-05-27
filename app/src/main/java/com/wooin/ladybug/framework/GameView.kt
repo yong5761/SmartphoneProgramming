@@ -40,6 +40,9 @@ class GameView @JvmOverloads constructor(
     private var framesSinceSpawn = 0
     private var framesSinceItemSpawn = 0
     private var slowFramesLeft = 0
+    private var gameStartNanos = 0L
+    private var lastSecs = -1
+    private var timeText = "00:00"
 
     private var targetX: Float = 0f
     private var targetY: Float = 0f
@@ -48,6 +51,14 @@ class GameView @JvmOverloads constructor(
     private var isGameOver: Boolean = false
 
     private val restartButtonRect = RectF()
+
+    private val timePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textSize = 20f * density
+        textAlign = Paint.Align.LEFT
+        typeface = Typeface.DEFAULT_BOLD
+        setShadowLayer(4f, 2f, 2f, Color.BLACK)
+    }
 
     private val gameOverTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
@@ -76,6 +87,12 @@ class GameView @JvmOverloads constructor(
             if (p == null) {
                 loopRunning = false
                 return
+            }
+            if (gameStartNanos == 0L) gameStartNanos = frameTimeNanos
+            val secs = ((frameTimeNanos - gameStartNanos) / 1_000_000_000L).toInt()
+            if (secs != lastSecs) {
+                lastSecs = secs
+                timeText = "%02d:%02d".format(secs / 60, secs % 60)
             }
             if (isTouching) movePlayerTowardTarget(p)
             updateEnemies()
@@ -119,6 +136,8 @@ class GameView @JvmOverloads constructor(
         enemies.forEach { it.draw(canvas) }
         items.forEach { it.draw(canvas) }
         player?.draw(canvas)
+        val p = 16f * density
+        canvas.drawText(timeText, p, p + timePaint.textSize, timePaint)
         if (isGameOver) {
             drawGameOverOverlay(canvas)
         }
@@ -343,6 +362,9 @@ class GameView @JvmOverloads constructor(
         framesSinceSpawn = 0
         framesSinceItemSpawn = 0
         slowFramesLeft = 0
+        gameStartNanos = 0L
+        lastSecs = -1
+        timeText = "00:00"
         val p = player
         if (p != null) {
             p.x = width / 2f
