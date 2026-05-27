@@ -21,10 +21,14 @@ class Player(
 
     var barrierFramesLeft: Int = 0
 
+    var hasLifeBarrier: Boolean = false
+
     val barrierRadius get() = when (barrierType) {
         ItemType.SHIELD -> radius + 90f
         else -> radius + 30f
     }
+
+    val lifeBarrierRadius = radius + 30f
 
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.RED
@@ -46,6 +50,12 @@ class Player(
         strokeWidth = 8f
     }
 
+    private val lifeStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 8f
+        color = ItemType.LIFE.color
+    }
+
     fun tickBarrier() {
         if (barrierType != null) {
             barrierFramesLeft--
@@ -57,6 +67,9 @@ class Player(
     }
 
     fun draw(canvas: Canvas) {
+        if (hasLifeBarrier) {
+            canvas.drawCircle(x, y, lifeBarrierRadius, lifeStrokePaint)
+        }
         barrierType?.let {
             if (it == ItemType.SHIELD) canvas.drawCircle(x, y, barrierRadius, barrierFillPaint)
             canvas.drawCircle(x, y, barrierRadius, barrierStrokePaint)

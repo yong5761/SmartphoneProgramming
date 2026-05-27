@@ -27,7 +27,7 @@ val DEFAULT_ITEM_INFOS: List<ItemInfo> = listOf(
     ItemInfo(
         name = "회복",
         description = "추가 생명 1 을 획득한다.",
-        iconResId = R.drawable.ic_item_heal
+        iconResId = R.drawable.ic_item_life
     ),
     ItemInfo(
         name = "점수 부스트",

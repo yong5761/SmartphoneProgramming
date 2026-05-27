@@ -80,6 +80,7 @@ class GameView @JvmOverloads constructor(
             if (isTouching) movePlayerTowardTarget(p)
             updateEnemies()
             if (p.barrierType == ItemType.SHIELD) applyShieldEffect(p)
+            if (p.hasLifeBarrier) applyLifeEffect(p)
             updateJangpans()
             p.tickBarrier()
             updateSlow()
@@ -232,13 +233,14 @@ class GameView @JvmOverloads constructor(
             val dy = p.y - item.y
             val rsum = p.radius + item.radius
             if (dx * dx + dy * dy <= rsum * rsum) {
-                if (item.type == ItemType.JANGPAN) {
-                    jangpans.add(Jangpan(item.x, item.y, JANGPAN_RADIUS, JANGPAN_FRAMES))
-                } else if (item.type == ItemType.SLOW) {
-                    slowFramesLeft = SLOW_FRAMES
-                } else {
-                    p.barrierType = item.type
-                    p.barrierFramesLeft = BARRIER_SHIELD_FRAMES
+                when (item.type) {
+                    ItemType.JANGPAN -> jangpans.add(Jangpan(item.x, item.y, JANGPAN_RADIUS, JANGPAN_FRAMES))
+                    ItemType.SLOW -> slowFramesLeft = SLOW_FRAMES
+                    ItemType.LIFE -> if (!p.hasLifeBarrier) p.hasLifeBarrier = true
+                    else -> {
+                        p.barrierType = item.type
+                        p.barrierFramesLeft = BARRIER_SHIELD_FRAMES
+                    }
                 }
                 it.remove()
             }
@@ -266,6 +268,21 @@ class GameView @JvmOverloads constructor(
 
     private fun updateSlow() {
         if (slowFramesLeft > 0) slowFramesLeft--
+    }
+
+    private fun applyLifeEffect(p: Player) {
+        val it = enemies.iterator()
+        while (it.hasNext()) {
+            val e = it.next()
+            val dx = p.x - e.x
+            val dy = p.y - e.y
+            val rsum = p.lifeBarrierRadius + e.radius
+            if (dx * dx + dy * dy <= rsum * rsum) {
+                it.remove()
+                p.hasLifeBarrier = false
+                return
+            }
+        }
     }
 
     private fun applyShieldEffect(p: Player) {
@@ -332,6 +349,7 @@ class GameView @JvmOverloads constructor(
             p.y = height * 0.75f
             p.barrierType = null
             p.barrierFramesLeft = 0
+            p.hasLifeBarrier = false
         }
         startLoopIfNeeded()
         invalidate()

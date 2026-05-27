@@ -8,7 +8,7 @@ enum class ItemType(val color: Int) {
     JANGPAN(Color.parseColor("#2ECC71")),
     SHIELD(Color.parseColor("#3498DB")),
     SLOW(Color.parseColor("#9B59B6")),
-    HEAL(Color.parseColor("#E91E63")),
+    LIFE(Color.parseColor("#E91E63")),
     SCORE(Color.parseColor("#F1C40F"))
 }
 
