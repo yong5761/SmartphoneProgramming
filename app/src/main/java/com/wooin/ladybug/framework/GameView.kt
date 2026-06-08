@@ -40,9 +40,11 @@ class GameView @JvmOverloads constructor(
     private var framesSinceSpawn = 0
     private var framesSinceItemSpawn = 0
     private var slowFramesLeft = 0
+    private var scoreBoostFramesLeft = 0
     private var gameStartNanos = 0L
     private var lastSecs = -1
     private var timeText = "00:00"
+    private var score = 0
 
     private var targetX: Float = 0f
     private var targetY: Float = 0f
@@ -56,6 +58,14 @@ class GameView @JvmOverloads constructor(
         color = Color.WHITE
         textSize = 20f * density
         textAlign = Paint.Align.LEFT
+        typeface = Typeface.DEFAULT_BOLD
+        setShadowLayer(4f, 2f, 2f, Color.BLACK)
+    }
+
+    private val scorePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textSize = 20f * density
+        textAlign = Paint.Align.RIGHT
         typeface = Typeface.DEFAULT_BOLD
         setShadowLayer(4f, 2f, 2f, Color.BLACK)
     }
@@ -93,6 +103,7 @@ class GameView @JvmOverloads constructor(
             if (secs != lastSecs) {
                 lastSecs = secs
                 timeText = "%02d:%02d".format(secs / 60, secs % 60)
+                score += SCORE_PER_SEC * if (scoreBoostFramesLeft > 0) 2 else 1
             }
             if (isTouching) movePlayerTowardTarget(p)
             updateEnemies()
@@ -101,6 +112,7 @@ class GameView @JvmOverloads constructor(
             updateJangpans()
             p.tickBarrier()
             updateSlow()
+            updateScoreBoost()
             updateItems()
             checkItemPickup(p)
             spawnEnemyIfDue()
@@ -138,6 +150,7 @@ class GameView @JvmOverloads constructor(
         player?.draw(canvas)
         val p = 16f * density
         canvas.drawText(timeText, p, p + timePaint.textSize, timePaint)
+        canvas.drawText("$score", width - p, p + scorePaint.textSize, scorePaint)
         if (isGameOver) {
             drawGameOverOverlay(canvas)
         }
@@ -257,6 +270,7 @@ class GameView @JvmOverloads constructor(
                     ItemType.JANGPAN -> jangpans.add(Jangpan(item.x, item.y, JANGPAN_RADIUS, JANGPAN_FRAMES))
                     ItemType.SLOW -> slowFramesLeft = SLOW_FRAMES
                     ItemType.LIFE -> if (!p.hasLifeBarrier) p.hasLifeBarrier = true
+                    ItemType.SCORE -> scoreBoostFramesLeft = SCORE_BOOST_FRAMES
                     else -> {
                         p.barrierType = item.type
                         p.barrierFramesLeft = BARRIER_SHIELD_FRAMES
@@ -281,13 +295,20 @@ class GameView @JvmOverloads constructor(
                 val e = eit.next()
                 val dx = e.x - jangpan.x
                 val dy = e.y - jangpan.y
-                if (dx * dx + dy * dy <= jangpan.radius * jangpan.radius) eit.remove()
+                if (dx * dx + dy * dy <= jangpan.radius * jangpan.radius) {
+                    eit.remove()
+                    score += SCORE_PER_KILL * if (scoreBoostFramesLeft > 0) 2 else 1
+                }
             }
         }
     }
 
     private fun updateSlow() {
         if (slowFramesLeft > 0) slowFramesLeft--
+    }
+
+    private fun updateScoreBoost() {
+        if (scoreBoostFramesLeft > 0) scoreBoostFramesLeft--
     }
 
     private fun applyLifeEffect(p: Player) {
@@ -300,6 +321,7 @@ class GameView @JvmOverloads constructor(
             if (dx * dx + dy * dy <= rsum * rsum) {
                 it.remove()
                 p.hasLifeBarrier = false
+                score += SCORE_PER_KILL * if (scoreBoostFramesLeft > 0) 2 else 1
                 return
             }
         }
@@ -312,7 +334,10 @@ class GameView @JvmOverloads constructor(
             val dx = p.x - e.x
             val dy = p.y - e.y
             val rsum = p.barrierRadius + e.radius
-            if (dx * dx + dy * dy <= rsum * rsum) it.remove()
+            if (dx * dx + dy * dy <= rsum * rsum) {
+                it.remove()
+                score += SCORE_PER_KILL * if (scoreBoostFramesLeft > 0) 2 else 1
+            }
         }
     }
 
@@ -347,6 +372,7 @@ class GameView @JvmOverloads constructor(
         canvas.drawColor(Color.argb(160, 0, 0, 0))
         val gameOverY = height / 2f - 60f * density
         canvas.drawText("GAME OVER", width / 2f, gameOverY, gameOverTextPaint)
+        canvas.drawText("점수: $score", width / 2f, height / 2f + 10f * density, restartButtonTextPaint)
         val cornerRadius = 20f * density
         canvas.drawRoundRect(restartButtonRect, cornerRadius, cornerRadius, restartButtonFillPaint)
         val textY = restartButtonRect.centerY() -
@@ -363,9 +389,11 @@ class GameView @JvmOverloads constructor(
         framesSinceSpawn = 0
         framesSinceItemSpawn = 0
         slowFramesLeft = 0
+        scoreBoostFramesLeft = 0
         gameStartNanos = 0L
         lastSecs = -1
         timeText = "00:00"
+        score = 0
         val p = player
         if (p != null) {
             p.x = width / 2f
@@ -389,6 +417,9 @@ class GameView @JvmOverloads constructor(
         private const val JANGPAN_RADIUS = 250f
         private const val JANGPAN_FRAMES = 180
         private const val MIN_SPAWN_INTERVAL_FRAMES = 15
+        private const val SCORE_PER_SEC = 1
+        private const val SCORE_PER_KILL = 10
+        private const val SCORE_BOOST_FRAMES = 300
         private const val SLOW_FRAMES = 300
         private const val SLOW_SPEED_FACTOR = 0.3f
         private val SLOW_SPAWN_INTERVAL = (SPAWN_INTERVAL_FRAMES / SLOW_SPEED_FACTOR).toInt()
