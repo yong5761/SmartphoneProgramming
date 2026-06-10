@@ -9,11 +9,15 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.util.AttributeSet
 import android.view.Choreographer
 import android.view.MotionEvent
 import android.view.View
+import com.wooin.ladybug.BgmPlayer
 import com.wooin.ladybug.R
+import com.wooin.ladybug.SettingsActivity
 import com.wooin.ladybug.game.Enemy
 import com.wooin.ladybug.game.Item
 import com.wooin.ladybug.game.ItemType
@@ -27,6 +31,23 @@ class GameView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+
+    private val soundPool = SoundPool.Builder()
+        .setMaxStreams(5)
+        .setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+        ).build()
+    private val popSoundId = soundPool.load(context, R.raw.pop, 1)
+    private var popReady = false
+
+    init {
+        soundPool.setOnLoadCompleteListener { _, _, status ->
+            if (status == 0) popReady = true
+        }
+    }
 
     private val density = resources.displayMetrics.density
     private val backgroundBitmap: Bitmap =
@@ -117,7 +138,10 @@ class GameView @JvmOverloads constructor(
             checkItemPickup(p)
             spawnEnemyIfDue()
             spawnItemIfDue()
-            if (checkCollision(p)) isGameOver = true
+            if (checkCollision(p)) {
+                isGameOver = true
+                BgmPlayer.stop()
+            }
             invalidate()
             if (isGameOver) {
                 loopRunning = false
@@ -186,6 +210,7 @@ class GameView @JvmOverloads constructor(
         isTouching = false
         scaledBackground?.recycle()
         scaledBackground = null
+        soundPool.release()
     }
 
     private fun startLoopIfNeeded() {
@@ -298,9 +323,18 @@ class GameView @JvmOverloads constructor(
                 if (dx * dx + dy * dy <= jangpan.radius * jangpan.radius) {
                     eit.remove()
                     score += SCORE_PER_KILL * if (scoreBoostFramesLeft > 0) 2 else 1
+                    playPopSound()
                 }
             }
         }
+    }
+
+    private fun playPopSound() {
+        if (!popReady) return
+        val prefs = context.getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
+        if (!prefs.getBoolean(SettingsActivity.KEY_SFX_ENABLED, true)) return
+        val vol = prefs.getInt(SettingsActivity.KEY_SFX_VOLUME, 50) / 100f
+        soundPool.play(popSoundId, vol, vol, 0, 0, 1f)
     }
 
     private fun updateSlow() {
@@ -322,6 +356,7 @@ class GameView @JvmOverloads constructor(
                 it.remove()
                 p.hasLifeBarrier = false
                 score += SCORE_PER_KILL * if (scoreBoostFramesLeft > 0) 2 else 1
+                playPopSound()
                 return
             }
         }
@@ -337,6 +372,7 @@ class GameView @JvmOverloads constructor(
             if (dx * dx + dy * dy <= rsum * rsum) {
                 it.remove()
                 score += SCORE_PER_KILL * if (scoreBoostFramesLeft > 0) 2 else 1
+                playPopSound()
             }
         }
     }
@@ -383,6 +419,7 @@ class GameView @JvmOverloads constructor(
     private fun restartGame() {
         isGameOver = false
         isTouching = false
+        BgmPlayer.restartFromBeginning()
         enemies.clear()
         items.clear()
         jangpans.clear()

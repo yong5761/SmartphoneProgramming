@@ -36,4 +36,10 @@ class MainActivity : AppCompatActivity() {
             overridePendingTransition(0, 0)
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        BgmPlayer.ensurePlaying(this)
+        BgmPlayer.applySettings(this)
+    }
 }

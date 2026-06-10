@@ -50,6 +50,7 @@ class SettingsActivity : AppCompatActivity() {
         switchBgm.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(KEY_BGM_ENABLED, isChecked).apply()
             applySeekBarEnabled(seekBgm, isChecked)
+            BgmPlayer.applySettings(this)
         }
         switchSfx.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(KEY_SFX_ENABLED, isChecked).apply()
@@ -69,6 +70,7 @@ class SettingsActivity : AppCompatActivity() {
         override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
             if (fromUser) {
                 prefs.edit().putInt(key, progress).apply()
+                if (key == KEY_BGM_VOLUME) BgmPlayer.applySettings(this@SettingsActivity)
             }
         }
 
