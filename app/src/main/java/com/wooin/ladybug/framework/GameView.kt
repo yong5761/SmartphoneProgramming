@@ -147,7 +147,7 @@ class GameView @JvmOverloads constructor(
         jangpans.forEach { it.draw(canvas) }
         enemies.forEach { it.draw(canvas) }
         items.forEach { it.draw(canvas) }
-        player?.draw(canvas)
+        player?.draw(canvas, targetX, targetY)
         val p = 16f * density
         canvas.drawText(timeText, p, p + timePaint.textSize, timePaint)
         canvas.drawText("$score", width - p, p + scorePaint.textSize, scorePaint)
