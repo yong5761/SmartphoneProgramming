@@ -24,7 +24,7 @@
 
 | 메뉴 화면 | 인게임 |
 |----------|--------|
-| ![메뉴](image/menu.jpg) | ![인게임](image/ingame1.jpg) |
+| ![메뉴](image/menu.jpg) | ![인게임](image/ingame_new.jpg) |
 
 ---
 
